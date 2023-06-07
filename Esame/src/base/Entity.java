@@ -1,7 +1,6 @@
 package base;
 
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Entity {
     private int health;

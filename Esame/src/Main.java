@@ -1,28 +1,40 @@
-import base.Game;
-import base.Node;
-
-import java.util.ArrayList;
-import java.util.List;
+import base.BaseModule;
+import it.kibo.fp.lib.Menu;
+import module11.Module11;
+import module2.Module2;
+import module3.Module3;
 
 public class Main {
     public static void main(String[] args) {
-        Node start = new Node(0);
-        Node node2 = new Node(1);
-        Node node3 = new Node(2);
-        Node end = new Node (3);
 
-        start.addLink(node2);
-        start.addLink(node3);
-        node2.addLink(end);
-        node3.addLink(end);
+        String moduleMenuTitle = "Scegli modulo da eseguire";
+        String[] moduleMenuEntries = {
+                "Modulo base",
+                "Modulo 1.1",
+                "Modulo 2",
+                "Modulo 3"
+        };
+        Menu moduleMenu = new Menu(moduleMenuTitle, moduleMenuEntries, true, true, true);
 
-        List<Node> baseWorld = new ArrayList<>();
-        baseWorld.add(start);
-        baseWorld.add(node2);
-        baseWorld.add(node3);
-        baseWorld.add(end);
-
-        Game game = new Game(baseWorld);
-        game.start();
+        try{
+            switch(moduleMenu.choose()){
+                case 1 -> {
+                    BaseModule.start();
+                }
+                case 2 -> {
+                    Module11.start();
+                }
+                case 3 -> {
+                    Module2.start();
+                }
+                case 4 -> {
+                    Module3.start();
+                }
+            }
+        }catch(Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
+
+
 }

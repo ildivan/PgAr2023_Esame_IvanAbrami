@@ -1,13 +1,14 @@
 package base;
 
 import it.kibo.fp.lib.InputData;
+import it.kibo.fp.lib.RandomDraws;
 
 import java.util.*;
 
 public class Game {
-    private Player player;
-    private List<Node> world;
-    private Map<Node, Entity> monsters;
+    protected Player player;
+    protected List<Node> world;
+    protected Map<Node, Entity> monsters;
 
     private boolean gameWon;
 
@@ -16,9 +17,12 @@ public class Game {
         player = new Player();
         monsters = new HashMap<>();
 
-        //A third of the nodes will have a monster
-        for (int i = 1; i < world.size(); i += 3) {
-            monsters.put(world.get(i), new Monster());
+        //Around a third of the nodes will have a monster
+        for (int i = 1; i < world.size(); i++) {
+            int rand = RandomDraws.drawInteger(1,100);
+            if(rand <= 33){
+                monsters.put(world.get(i), new Monster());
+            }
         }
 
         //The last node will have Cammo
@@ -70,7 +74,7 @@ public class Game {
         }
     }
 
-    private void changePlayerStatistic() {
+    protected void changePlayerStatistic() {
         Random random = new Random();
         if(random.nextBoolean()){
             player.modifyHealth(-5,10);
@@ -81,7 +85,7 @@ public class Game {
         }
     }
 
-    private void fightMonster(Entity monsterFound) {
+    protected void fightMonster(Entity monsterFound) {
         if(monsterFound instanceof Monster) {
             System.out.println("Trovato un mostro comune!\n");
             Entity.combat(player,monsterFound);
@@ -92,7 +96,7 @@ public class Game {
         }
     }
 
-    private static List<Node> getValidConnections
+    protected List<Node> getValidConnections
             (List<Node> allConnections, List<Node> invalidConnections, Node end){
         Map<Node,Boolean> arePathsValid = new HashMap<>();
         for (Node possibleNextNode : allConnections) {
@@ -104,7 +108,7 @@ public class Game {
                 .toList();
     }
 
-    private static Node getNodeFromId(List<Node> nodes, int id) {
+    protected static Node getNodeFromId(List<Node> nodes, int id) {
         for (Node node : nodes){
             if(node.getId() == id)
                 return node;
