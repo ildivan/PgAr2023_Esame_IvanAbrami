@@ -48,7 +48,7 @@ public class FiscalCodeChecker {
         //Checks cases without trailing X at the end.
         String withoutXRegex = "([^AEIOUX]{3}|[^AEIOUX]{2}[AEIOU]|[^AEIOUX][AEIOU]{2}|[AEIOU]{3})";
         //Checks cases with trailing X at the end.
-        String withXRegex = "([^AEIOUX][AEIOU]X|[AEIOU][AEIOU]X)";
+        String withXRegex = "([AEIOUX][AEIOU]X|[AEIOU][AEIOU]X)";
         //Returns true if the name matches either of the regular expressions.
         return name.matches(withoutXRegex) || name.matches(withXRegex);
     }
@@ -82,8 +82,8 @@ public class FiscalCodeChecker {
     private boolean doesDayExistsInMonth(int day, Character month) {
         int daysInTheMonth; //The number of days in the month of birth.
         switch (month) {
-            case 'A', 'C', 'E', 'L', 'M' -> daysInTheMonth = 31;
-            case 'D', 'H', 'P', 'R', 'S', 'T' -> daysInTheMonth = 30;
+            case 'A', 'C', 'E', 'L','R', 'M', 'T' -> daysInTheMonth = 31;
+            case 'D', 'H', 'P',  'S' -> daysInTheMonth = 30;
             case 'B' -> daysInTheMonth = 28;
             default -> daysInTheMonth = 0;
         }

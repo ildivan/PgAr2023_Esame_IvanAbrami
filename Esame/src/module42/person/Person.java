@@ -1,10 +1,7 @@
 package module42.person;
 
-import CodiceFiscale.error.InvalidInputException;
-import CodiceFiscale.fiscalcode.FiscalCode;
-import CodiceFiscale.fiscalcode.FiscalCodeGenerator;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import module42.error.InvalidInputException;
+import module42.fiscalcode.FiscalCodeGenerator;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -14,20 +11,14 @@ import java.time.YearMonth;
  */
 public class Person{
 
-    @SerializedName("nome")
     private final String name;
-    @SerializedName("cognome")
     private final String surname;
-    @SerializedName("sesso")
     private final Sex sex;
-    @SerializedName("comune_nascita")
     private final String cityOfBirth;
-    @SerializedName("data_nascita")
     private final String dateOfBirth;
 
-    @Expose(deserialize = false)
-    @SerializedName("codice_fiscale")
-    private FiscalCode fiscalCode;
+    private String fiscalCode;
+    private final String dateOfExpiration;
 
     /**
      * @param name         Name of the person.
@@ -37,7 +28,7 @@ public class Person{
      * @param dateOfBirth  String representing the person's date of birth formatted this way "YYYY-MM-DD"
      */
     public Person(String name, String surname, Sex sex,
-                  String cityOfBirth, String dateOfBirth){
+                  String cityOfBirth, String dateOfBirth, String fiscalCode, String dateOfExpiration){
         checkName(name);
         checkName(surname);
         this.name = name;
@@ -50,15 +41,18 @@ public class Person{
         this.cityOfBirth = cityOfBirth.replaceAll("[^'\\-\\sa-zA-Z]","");
 
         checkDateFormat(dateOfBirth);
-        String[] dividedDate = dateOfBirth.split("-");
-        int yearOfBirth = Integer.parseInt(dividedDate[0]);
-        int monthOfBirth = Integer.parseInt(dividedDate[1]);
-        int dayOfBirth = Integer.parseInt(dividedDate[2]);
+        String[] dividedBirthDate = dateOfBirth.split("-");
+        int yearOfBirth = Integer.parseInt(dividedBirthDate[0]);
+        int monthOfBirth = Integer.parseInt(dividedBirthDate[1]);
+        int dayOfBirth = Integer.parseInt(dividedBirthDate[2]);
 
         checkDateValidity(yearOfBirth, monthOfBirth, dayOfBirth);
         this.dateOfBirth = dateOfBirth;
 
-        fiscalCode = FiscalCode.ABSENT;
+        checkDateFormat(dateOfExpiration);
+        this.dateOfExpiration = dateOfExpiration;
+
+        this.fiscalCode = fiscalCode;
     }
 
 
@@ -161,6 +155,7 @@ public class Person{
     public String getDateOfBirth() {
         return dateOfBirth;
     }
+    public String getDateOfExpiration() {return dateOfExpiration;}
 
     public int getYearOfBirth() {
         return Integer.parseInt(dateOfBirth.substring(0,4));
@@ -182,14 +177,8 @@ public class Person{
         this.fiscalCode = generator.generateFiscalCode(this);
     }
 
-    public FiscalCode getFiscalCode() {
+    public String getFiscalCode() {
         return fiscalCode;
     }
 
-    /**
-     * Resets the person's fiscal code to an instance containing the default value.
-     */
-    public void resetFiscalCode() {
-        fiscalCode = FiscalCode.ABSENT;
-    }
 }

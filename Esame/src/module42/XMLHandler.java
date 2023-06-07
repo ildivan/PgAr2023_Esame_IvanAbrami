@@ -1,20 +1,19 @@
 package module42;
 
-import CodiceFiscale.person.Person;
-import CodiceFiscale.person.Sex;
+import base.Node;
+import module42.person.Person;
+import module42.person.Sex;
 
 import javax.xml.stream.*;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class XML {
+public class XMLHandler {
     private static final XMLInputFactory xmlif = XMLInputFactory.newInstance();
-    private static final XMLOutputFactory xmlof = XMLOutputFactory.newInstance();
 
     //Search for city names and codes in the given filepath and returns them as a map.
     public static Map<String, String> getCityCodes(String filepath)
@@ -31,17 +30,12 @@ public class XML {
         return cityCodesMap;
     }
 
-    //Search for fiscal codes in the given filepath and returns them as a list of strings.
-    public static List<String> getFiscalCodes(String filepath)
-            throws FileNotFoundException, XMLStreamException {
-        return readFromFile(filepath,"codice").get("codice");
-    }
 
     //Search for people data in the given filepath and returns them as a list of Person instances.
     public static List<Person> getPeople(String filepath)
             throws FileNotFoundException, XMLStreamException {
         //The list of tags to search for in the file.
-        String[] tags = {"nome","cognome","sesso","comune_nascita","data_nascita"};
+        String[] tags = {"nome","cognome","sesso","comune_nascita","data_nascita","codice_fiscale","data_scadenza_id"};
         //Maps every tag to the list of strings found in the file inside that tag.
         Map<String, List<String>> peopleData = readFromFile(filepath, tags);
 
@@ -51,18 +45,22 @@ public class XML {
         List<String> sexes = peopleData.get(tags[2]);
         List<String> citiesOfBirth = peopleData.get(tags[3]);
         List<String> datesOfBirth = peopleData.get(tags[4]);
+        List<String> fiscalCodes = peopleData.get(tags[5]);
+        List<String> datesOfExpiration = peopleData.get(tags[6]);
 
         for (int i = 0; i < names.size(); i++) {
             //An exception will be thrown in the constructor if the sex is null
             Sex sex = (sexes.get(i).equals("M") ? Sex.M : (sexes.get(i).equals("F") ? Sex.F : null));
             people.add(new Person(
-                    names.get(i), surnames.get(i), sex, citiesOfBirth.get(i), datesOfBirth.get(i))
+                    names.get(i), surnames.get(i), sex,
+                    citiesOfBirth.get(i), datesOfBirth.get(i),
+                    fiscalCodes.get(i), datesOfExpiration.get(i))
             );
         }
         return people;
     }
 
-    //Generic method to read from a XML file given the file path
+    //Generic method to read from a XMLHandler file given the file path
     // and the list of tags containing data to search for.
     public static Map<String,List<String>> readFromFile(String filepath,String...tagNames)
             throws FileNotFoundException, XMLStreamException{
@@ -97,75 +95,117 @@ public class XML {
         return data;
     }
 
-    //Writes to file the people with their fiscal codes,
-    //then writes the list of invalid fiscal codes
-    //and the list of unmatched fiscal codes.
-    public static void writeOutput(List<Person> people,List<String> invalid, List<String> unmatched, String filepath){
-        XMLStreamWriter xmlw;
-        try {
-            xmlw = xmlof.createXMLStreamWriter(new FileOutputStream(filepath), "utf-8");
-            xmlw.writeStartDocument("utf-8", "1.0");
-            xmlw.writeStartElement("output");
+    public static List<List<Node>> getMaps(String filepath) throws XMLStreamException, FileNotFoundException {
+        List<List<Node>> nodeMap = getNodes(filepath);
+        System.out.println(nodeMap);
 
-            writePeopleSection(xmlw,people);//Writes the section 'persone'
-            writeCodesSection(xmlw,invalid,unmatched);//Writes the section 'codici'
-
-            xmlw.writeEndElement();
-            xmlw.writeEndDocument();
-            xmlw.flush();
-            xmlw.close();
-        } catch (Exception e) {
-            System.out.println("Errore nella scrittura");
+        List<Map<String, List<String>>> links = readLinksBetweenNodes(filepath);
+        for (int i = 0; i < links.size(); i++) {
+            var mapLinks = links.get(i);
+            for (String id : mapLinks.keySet()) {
+                Node node = getNodeFromId(nodeMap.get(i), Integer.parseInt(id));
+                for (String linkedNodeId : mapLinks.get(id)) {
+                    node.addLink(getNodeFromId(nodeMap.get(i) , Integer.parseInt(linkedNodeId)));
+                    getNodeFromId(nodeMap.get(i) , Integer.parseInt(linkedNodeId)).addLink(node);
+                }
+            }
         }
+
+        return nodeMap;
     }
 
-    private static void writePeopleSection(XMLStreamWriter xmlw, List<Person> people) throws XMLStreamException {
-        xmlw.writeStartElement("persone");
-        xmlw.writeAttribute("numero",Integer.toString(people.size()));
-        for (int i = 0; i < people.size(); i++) {
-            writePerson(xmlw,people.get(i),i);
+    /**
+     * @param cities A list of cities
+     * @param id     The id of the Node to find
+     * @return The Node from the list given its id
+     */
+    public static Node getNodeFromId(List<Node> cities, int id) {
+        for (Node Node : cities) {
+            if (Node.getId() == id) {
+                return Node;
+            }
         }
-        xmlw.writeEndElement();
+        return null;
     }
 
-    //Writes to file the XML structure of a single person
-    private static void writePerson(XMLStreamWriter xmlw, Person person, int id) throws XMLStreamException {
-        xmlw.writeStartElement("persona");
-        xmlw.writeAttribute("id", Integer.toString(id));
+    /**
+     * Gets the connections between cities as a map that maps ids to lists of ids,
+     * Each id is mapped to a list of the ids the Node is connected to.
+     *
+     * @param filepath Where to look for the links.
+     * @return The map containing all connections.
+     */
+    public static List<Map<String, List<String>>> readLinksBetweenNodes(String filepath)
+            throws FileNotFoundException, XMLStreamException {
+        XMLStreamReader xmlr;
+        xmlr = xmlif.createXMLStreamReader(filepath,
+                new FileInputStream(filepath));
 
-        writeTag(xmlw,"nome",person.getName());
-        writeTag(xmlw,"cognome",person.getSurname());
-        writeTag(xmlw,"sesso",person.getSex().toString());
-        writeTag(xmlw,"comune_nascita",person.getCityOfBirth());
-        writeTag(xmlw,"data_nascita",person.getDateOfBirth());
-        writeTag(xmlw,"codice_fiscale",person.getFiscalCode().getCode());
+        List<Map<String, List<String>>> links = new ArrayList<>();
 
-        xmlw.writeEndElement();
-    }
+        String lastId = "1";
+        String lastTag = "";
+        while (xmlr.hasNext()) {
+            if (xmlr.getEventType() == XMLStreamConstants.START_ELEMENT) {
+                lastTag = xmlr.getLocalName();
 
-    private static void writeCodesSection(XMLStreamWriter xmlw, List<String> invalid, List<String> unmatched)
-            throws XMLStreamException {
-        xmlw.writeStartElement("codici");
-        writeFiscalCodeSeries(xmlw,invalid, "invalidi");
-        writeFiscalCodeSeries(xmlw,unmatched, "spaiati");
-        xmlw.writeEndElement();
-    }
+                if(lastTag.equals("MAPPA")){
+                    links.add(new HashMap<>());
+                }
 
-    //Writes to file the list of fiscal code's XML structure
-    private static void writeFiscalCodeSeries(XMLStreamWriter xmlw, List<String> series, String name)
-            throws XMLStreamException {
-        xmlw.writeStartElement(name);
-        xmlw.writeAttribute("numero",Integer.toString(series.size()));
-        for (String code : series){
-            writeTag(xmlw,"codice",code);
+                for (int i = 0; i < xmlr.getAttributeCount(); i++) {
+                    if (xmlr.getAttributeLocalName(i).equals("NODO")) {
+                        lastId = xmlr.getAttributeValue(i);
+                        links.get(links.size()-1).put(lastId, new ArrayList<>());
+                    }
+                }
+            }else if(xmlr.getEventType() == XMLStreamConstants.CHARACTERS) {
+                if (xmlr.getText().trim().length() > 0) {
+                    if (lastTag.equals("COLLEGAMENTO")){
+                        links.get(links.size()-1).get(lastId).add(xmlr.getText().trim());
+                    }
+                }
+            }
+            xmlr.next();
         }
-        xmlw.writeEndElement();
+
+        return links;
     }
 
-    //Writes xml tag that does not have any sub-tags or any attributes.
-    private static void writeTag(XMLStreamWriter xmlw, String name, String value) throws XMLStreamException {
-        xmlw.writeStartElement(name);
-        xmlw.writeCharacters(value);
-        xmlw.writeEndElement();
+
+    public static List<List<Node>> getNodes(String filepath)
+            throws FileNotFoundException, XMLStreamException{
+        List<List<Node>> worlds = new ArrayList<>();
+
+        XMLStreamReader xmlr;
+        xmlr = xmlif.createXMLStreamReader(filepath,
+                new FileInputStream(filepath));
+
+        String lastTag = "";
+        String lastId = "";
+        while(xmlr.hasNext()) {
+            switch (xmlr.getEventType()) {
+                case XMLStreamConstants.START_ELEMENT -> {
+                    lastTag = xmlr.getLocalName();
+                    if (lastTag.equals("MAPPA")){
+                        worlds.add(new ArrayList<>());
+                    }
+
+                    for (int i = 0; i < xmlr.getAttributeCount(); i++) {
+                        if(xmlr.getAttributeLocalName(i).equals("NODO")){
+                            lastId = xmlr.getAttributeValue(i);
+                        }
+                    }
+                }
+                case XMLStreamConstants.END_ELEMENT -> {
+                    if (xmlr.getLocalName().equals("NODO")) {
+                        worlds.get(worlds.size()-1).add(new Node(Integer.parseInt(lastId)));
+                    }
+                }
+            }
+            xmlr.next();
+        }
+
+        return worlds;
     }
 }

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static base.BaseModule.*;
+import static base.BaseModule.getBaseWorld;
 import static base.BaseModule.pressEnterToContinue;
 
 public class Module3 {

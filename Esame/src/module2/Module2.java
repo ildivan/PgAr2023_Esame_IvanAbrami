@@ -4,7 +4,6 @@ import base.Game;
 import base.Node;
 import it.kibo.fp.lib.InputData;
 import it.kibo.fp.lib.Menu;
-import it.kibo.fp.lib.RandomDraws;
 import module11.XMLHandler;
 
 import javax.xml.stream.XMLStreamException;
@@ -13,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static base.BaseModule.*;
+import static base.BaseModule.getBaseWorld;
 import static base.BaseModule.pressEnterToContinue;
 
 public class Module2 {

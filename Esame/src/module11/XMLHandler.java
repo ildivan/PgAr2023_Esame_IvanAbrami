@@ -11,11 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Class that handles reading and writing with XML files.
+ * Class that handles reading and writing with XMLHandler files.
  */
 public class XMLHandler {
     private static final XMLInputFactory xmlif = XMLInputFactory.newInstance();
-    private static final XMLOutputFactory xmlof = XMLOutputFactory.newInstance();
 
     /**
      * Reads cities and connections from specified filepath

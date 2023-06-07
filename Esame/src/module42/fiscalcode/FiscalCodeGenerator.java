@@ -1,8 +1,8 @@
 package module42.fiscalcode;
 
-import CodiceFiscale.error.InvalidInputException;
-import CodiceFiscale.person.Person;
-import CodiceFiscale.person.Sex;
+import module42.error.InvalidInputException;
+import module42.person.Person;
+import module42.person.Sex;
 
 import java.util.Map;
 
@@ -14,20 +14,19 @@ public class FiscalCodeGenerator {
     }
 
 
-    public FiscalCode generateFiscalCode(Person person){
+    public String generateFiscalCode(Person person){
         StringBuilder fiscalCode = new StringBuilder();
         fiscalCode.append(generateCodeForSurname(person.getSurname().toUpperCase()));
         fiscalCode.append(generateCodeForName(person.getName().toUpperCase()));
         int yearNumber = person.getYearOfBirth()%100;
         fiscalCode.append((yearNumber < 10 ? String.format("0%d",yearNumber) : yearNumber));
         fiscalCode.append(getMonthCode(person.getMonthOfBirth()));
-        fiscalCode.append(
-                (person.getSex() == Sex.M ? person.getDayOfBirth() : person.getDayOfBirth() + 40)
-        );
+        int month = (person.getSex() == Sex.M ? person.getDayOfBirth() : person.getDayOfBirth() + 40);
+        fiscalCode.append((month < 10 ? "0" + month : month));
         fiscalCode.append(getPersonCityCode(person.getCityOfBirth()));
         fiscalCode.append(getControlCharacter(fiscalCode.toString()));
 
-        return new FiscalCode(fiscalCode.toString());
+        return fiscalCode.toString();
     }
 
     private char getControlCharacter(String incompleteFiscalCode) {

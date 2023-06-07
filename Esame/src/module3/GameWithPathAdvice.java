@@ -61,6 +61,7 @@ public class GameWithPathAdvice extends Game {
                 chosenId = InputData.readInteger("Inserisci l'id del nodo: ");
             }while(getNodeFromId(possibleConnections, chosenId) == null);
 
+            visitedNodes.add(current);
             current = getNodeFromId(possibleConnections, chosenId);
         }
     }
