@@ -19,5 +19,5 @@
 - [X] Modulo 3: Percorso suggerito
 - Modulo 4 ( Riciclo )
 	- [ ] Modulo 4.1: Tamagolem
-	- [ ] Modulo 4.2: Patente e _libbretto_ prego
+	- [X] Modulo 4.2: Patente e _libbretto_ prego
 - [ ] Modulo 5: Base _ ** EXTREME ** _
